@@ -43,7 +43,7 @@ class TeekanneProduct(Product):
 
     def manipulate_tea_name(self, name):
         # remove ORGANICS BIO
-        to_replace = ["Organics BIO"]
+        to_replace = ["Organics BIO", "(Familienpackung)", "Black Tea"]
         # remove bio
         if self.get_brand in ["namastee", "willi dungl"]:
             to_replace.extend(["BIO", "Bio", "NamasTee"])
