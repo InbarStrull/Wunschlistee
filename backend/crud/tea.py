@@ -57,7 +57,11 @@ def create_tea_process(db, tea_data):
     # create brand if not found
     brand = get_or_create_brand(db, {"name": tea_data["brand"]})
 
-    tea = get_tea_by_name_brand_weight_bag(db, brand.id, tea_data["name"], tea_data["weight"], tea_data["bag_quantity"])
+    tea = get_tea_by_name_brand_weight_bag(db,
+                                           brand.id,
+                                           tea_data["name"],
+                                           tea_data["weight"],
+                                           tea_data["bag_quantity"])
 
     if not tea:
         tea = create_tea(db, tea_data, brand.id)
