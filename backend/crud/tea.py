@@ -1,6 +1,7 @@
 from .ingredient import get_or_create_ingredient
 from ..models import Tea, Brand, Ingredient, Store, Wishlist, TeaIngredient, TeaPrice, WishlistItem
-from .generic import add_commit_flush, get_instance, update_instance, delete_instance, get_all_instances
+from .generic import (add_commit_flush, get_instance, update_instance, delete_instance, get_all_instances,
+                      print_changes_in_instance)
 from .brand import get_or_create_brand
 from .tea_ingredient import add_ingredient_to_tea
 from .store import get_or_create_store
@@ -25,10 +26,13 @@ def create_tea(db, tea_data, brand_id):
     return add_commit_flush(db, tea)
 
 
-def get_tea_by_brand_url(db, brang_page_url):
-    tea = db.query(Tea).filter(Tea.brand_page_url == brang_page_url).first()
+def get_tea_by_brand_url(db, brand_page_url):
+    tea = db.query(Tea).filter(Tea.brand_page_url == brand_page_url).first()
 
     return tea
+
+def print_changes_in_tea(db, tea_id, tea_data):
+    print_changes_in_instance(db, Tea, tea_data, tea_id)
 
 
 def create_or_update_tea_by_url(db, tea_data):
