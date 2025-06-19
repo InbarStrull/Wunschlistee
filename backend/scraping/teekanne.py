@@ -303,12 +303,7 @@ class TeekanneScraper(Scraper):
 
 
     def add_to_db_func(self, db, tea_data):
-        tea = get_tea_by_brand_url(db, tea_data["brand_page_url"])
-        if tea:
-            print_changes_in_tea(db, tea.id, tea_data)
-
-        else:
-            print("before: It's a new tea!")
+        create_or_update_tea_by_url(db, tea_data)
 
 
 if __name__ == "__main__":
