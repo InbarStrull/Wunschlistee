@@ -58,8 +58,8 @@ class SparProduct(Product):
         name = name.split("\n")[-1]
 
         # take the part before Teebeutel
-        if "Teebeutel" in name:
-            name = name.split("Teebeutel")[0]
+        if " Teebeutel" in name:
+            name = name.split(" Teebeutel")[0]
             # take the part before number
             name = name[:get_first_occurrence_of_digit_reversed(name)]
 
