@@ -15,6 +15,29 @@ def delete_instance(db, model, instance_id):
         db.commit()
         return instance
 
+# compare between old instance and updated instance without updating db
+def print_changes_in_instance(db, model, new_instance_data, instance_id):
+    instance = get_instance(db, model, instance_id)
+    print("~~~~~~~~~~~~~~")
+    if instance:
+        for key, new_value in new_instance_data.items():
+
+            # check key is part of the model and not a new column
+            if not hasattr(instance, key):
+                continue
+
+            current_value = getattr(instance, key)
+
+            # check key is not a relational field
+            if hasattr(current_value, "_sa_instance_state") and not hasattr(new_value, "_sa_instance_state"):
+                continue
+
+
+            if current_value != new_value:
+                print(f"before {key}: {current_value}, after {key}: {new_value}")
+
+    print("~~~~~~~~~~~~~~")
+
 
 # generic update by id, without relational fields
 def update_instance(db, model, new_instance_data, instance_id):
@@ -24,7 +47,7 @@ def update_instance(db, model, new_instance_data, instance_id):
     if instance:
         for key, new_value in new_instance_data.items():
 
-            # check key is part of the model and not a noew column
+            # check key is part of the model and not a new column
             if not hasattr(instance, key):
                 continue
 
