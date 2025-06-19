@@ -450,6 +450,13 @@ class DMScraper(Scraper):
         product = DMProduct(store_page_url, detail_html, scraper, self.brand_or_store)
         return product.product_dict
 
+    def print_data(self, tea_data):
+        if tea_data["brand"] not in ("dmbio", "mivolis", "babylove"):
+            super().print_data(tea_data)
+
+    def add_to_db_func(self, db, tea_data):
+        if tea_data["brand"] in ("dmbio", "mivolis", "babylove"):
+            super().add_to_db_func(db, tea_data)
 """
     def run(self, scraper):
         page = 0
