@@ -1,6 +1,6 @@
 import re
 
-from backend.crud.tea import create_or_update_tea_by_url
+from backend.crud.tea import create_or_update_tea_by_url, get_tea_by_brand_url, print_changes_in_tea
 from backend.utils.conversions import safe_conversion_float, safe_conversion_int
 from backend.utils.string_operations import contains_substring, replace_texts, remove_suffix
 from backend.utils.scraping import fetch_listing_html
@@ -13,7 +13,7 @@ class TeekanneProduct(Product):
         self.brand_page_url = brand_page_url
         self.html = html
         self.scraper = scraper
-        self.brand = "teekanne"
+        #self.brand = "teekanne"
         self.product_dict = self.create_product_dict()
 
 
@@ -37,34 +37,42 @@ class TeekanneProduct(Product):
         elif "Willi Dungl" in brand:
             return "willi dungl"
 
-        elif "Namastee" in brand:
+        elif "NamasTee" in brand:
             return "namastee"
 
 
-    @staticmethod
     def manipulate_tea_name(self, name):
         # remove ORGANICS BIO
-        to_replace = ["ORGANICS BIO"]
+        to_replace = ["Organics BIO"]
         # remove bio
         if self.get_brand in ["namastee", "willi dungl"]:
-            to_replace.extend(["BIO", "Bio", "Namastee"])
+            to_replace.extend(["BIO", "Bio", "NamasTee"])
             name = replace_texts(name, to_replace)
 
-        to_replace.extend(["Loser Tee", "Fairtrade & RFA", "Fairtrade", "RFA"])
+        to_replace.extend(["Loser Tee", ", Fairtrade & RFA", "Fairtrade", "RFA"])
+
         name = replace_texts(name, to_replace)
 
         # handle bio
         name = name.replace("BIO", "Bio")
-        # Bio is not part of the name on the package of You're my Berry and Oriental Chai
-        # But that do not belong to willi dungl or namastee
-        if name.endswith(" Bio") and not contains_substring(name, ["You're my Berry", "Oriental Chai"]):
-            name = remove_suffix(" Bio")
-            name = f"Bio {name}"
+
+        # Bio is not part of the name on the package of the organics series or the luxury cup series
+        substrings = ["Selected. ", "Luxury Cup"]
+        if "/organics-" in self.brand_page_url or contains_substring(name, substrings + ["Taste of Winter", "Highland Darjeeling"]):
+            name = name.replace("Bio", "")
+            name = replace_texts(name, substrings)
 
         # remove weight
         name = re.sub(r'\(\d+(?:,\d+)?\s*g\)',"", name)
 
-        return name.strip()
+        name = name.strip()
+
+        # replace bio
+        if name.endswith(" Bio"):
+            name = remove_suffix(name, " Bio")
+            name = f"Bio {name}"
+
+        return name
 
     @staticmethod
     def manipulate_tea_weight(weight):
@@ -130,32 +138,22 @@ class TeekanneProduct(Product):
         if "Rainforest" in ingredient_text:
             ingredient_text = re.split(r"\*?\d*%?\s*Rainforest", ingredient_text)[0]
 
-        # add
+
+        elif "Alle Zutaten" in ingredient_text:
+            ingredient_text = ingredient_text.split("Alle Zutaten")[0]
+
         elif "aus kontrolliert" in ingredient_text:
             ingredient_text = ingredient_text.replace("(*100% ", "")
             ingredient_text = ingredient_text.split("aus kontrolliert")[0]
-        # done adding
 
-
-        #ingredient_text = ingredient_text.replace("(*100% aus kontrolliert biologischer Landwirtschaft)", "")
-        #ingredient_text = ingredient_text.replace(", *aus kontrolliert biologischer Landwirtschaft", "")
-        #ingredient_text = ingredient_text.replace("*aus kontrolliert biologischer Landwirtschaft", "")
-        #ingredient_text = ingredient_text.replace("*100% aus kontrolliert biologischem Anbau", "")
         ingredient_text = ingredient_text.replace("*100% Bio", "")
         ingredient_text = ingredient_text.replace("*Süßblatt=Steviablatt. Nicht zu verwechseln mit Steviolglycosiden, die in einem technischen Verfahren aus dem Süßblatt gewonnen werden.", "")
-        """
-        ingredient_text = ingredient_text.replace("Das in diesem Produkt verwendete Aroma ist laktosefrei, glutenfrei und vegan. Die übrigen Zutaten sind es von Natur aus.", "")
-        ingredient_text = ingredient_text.replace("Das in diesem Produkt verwendete Aroma ist laktosefrei und glutenfrei. Die übrigen Zutaten sind es von Natur aus.", "")
-        ingredient_text = ingredient_text.replace("Die in diesem Produkt verwendeten Aromen sind laktosefrei und glutenfrei. Die übrigen Zutaten sind es von Natur aus.", "")
-        """
 
-        # added
         pattern = r"(Das|Die) in diesem Produkt"
         ingredient_text = re.split(pattern, ingredient_text)[0].strip()
 
         ingredient_text = ingredient_text.split("Melatoningranulat")[0]
         ingredient_text = ingredient_text.split("Achten Sie auf eine abwechslungsreiche, ausgewogene")[0]
-        # done adding
 
         if "\\" in ingredient_text:
             ingredient_text = ingredient_text.split("\\")[0]
@@ -173,11 +171,7 @@ class TeekanneProduct(Product):
                                                         self.manipulate_brand_name)
 
             if not self.brand:
-                if "namastee" in self.get_name.lower():
-                    self.brand = "namastee"
-
-                else:
-                    self.brand = "teekanne"
+                self.brand = "teekanne"
 
         return self.brand
 
@@ -309,22 +303,12 @@ class TeekanneScraper(Scraper):
 
 
     def add_to_db_func(self, db, tea_data):
-        create_or_update_tea_by_url(db, tea_data)
+        tea = get_tea_by_brand_url(db, tea_data["brand_page_url"])
+        if tea:
+            print_changes_in_tea(db, tea.id, tea_data)
 
-"""
-    def run(self, scraper):
-        html = fetch_listing_html(self.url)
-        tea_elements = self.get_elements(html, "div.product-teaser.product-teaser--mobile-small")
-
-        for tea_html in tea_elements:
-            tea_data = self.parse_tea(tea_html, scraper)
-            if not tea_data:
-                continue
-
-            self.print_data(tea_data)
-            self.add_tea_to_db(tea_data)
-
-"""
+        else:
+            print("before: It's a new tea!")
 
 
 if __name__ == "__main__":
