@@ -2,6 +2,8 @@ import re
 import time
 
 from backend.crud.tea import handle_tea_from_store
+from backend.crud.tea_price import delete_tea_price_and_store
+from backend.database import SessionLocal
 from backend.util_functions import insert_to_ingredient_data
 from backend.utils.conversions import safe_conversion_float, safe_conversion_int
 from backend.utils.string_operations import replace_comma_with_dot, replace_texts, \
@@ -437,6 +439,64 @@ class DMScraper(Scraper):
     def get_tea_url(self, html):
         return self.get_field_url(html,"a.pdd_nxqq5u1.pdd_1by8b760", self.manipulate_tea_url)
 
+    def normalize_product(self, product_data):
+        name = product_data["name"]
+        name_and_brand = (product_data["name"], product_data["brand"])
+
+        new_name = name
+
+        match name_and_brand:
+            case ("Frauenpower", "yogi tea"):
+                new_name = "Frauen Power"
+
+            case ("Himbeere Cranberry", "teekanne"):
+                new_name = "You're my Berry"
+                product_data["weight"] = 45.0
+
+            case ("Glückstee", "yogi tea"):
+                new_name = "Glücks Tee"
+
+            case ("Schwarzer Tee English Breakfast", "teekanne"):
+                new_name = "Bio English Breakfast"
+
+            case ("Frauen", "lebensbaum"):
+                new_name = "Frauentee"
+
+            case ("Mango & Citrus Organic Infusion", "cupper"):
+                new_name = "Mango & Citrus"
+
+            case ("Von Herzen", "teekanne"):
+                product_data["weight"] = 45.0
+
+            case ("Fühl dich wohl", "willi dungl"):
+                new_name = "Fühl Dich Wohl"
+
+            case ("Blasen-Nieren", "willi dungl"):
+                new_name = "Blasen-Nieren Tee"
+
+            case ("Imun Plus", "neuner's"):
+                new_name = "Immun Plus"
+
+            case ("Classic Tee", "yogi tea"):
+                new_name = "Classic Chai"
+
+            case ("Waldbaden", "teekanne"):
+                product_data["brand"] = "namastee"
+
+            case ("Bio-Fenchel-Anis-Kümmel", "teekanne"):
+                new_name = "Bio Fenchel-Anis-Kümmel"
+
+            case ("Bio Brennessel", "teekanne"):
+                new_name = "Bio Brennnessel mit Zitronengras"
+
+            case ("Bio Hochland", "teekanne"):
+                new_name = "Bio Hochland Grüntee"
+
+            case ("Kamille", "teekanne"):
+                new_name = "Bio Kamille"
+
+        product_data["name"] = new_name
+        return product_data
 
     def manipulate_tea_url(self, url):
         return f"{self.BASE_URL}{url["href"]}"
@@ -449,7 +509,8 @@ class DMScraper(Scraper):
 
         detail_html = fetch_listing_html(store_page_url)
         product = DMProduct(store_page_url, detail_html, scraper, self.brand_or_store)
-        return product.product_dict
+        product_dict =  product.product_dict
+        return self.normalize_product(product_dict)
 
     def print_data(self, tea_data):
         if tea_data["brand"] not in ("dmbio", "mivolis", "babylove"):
