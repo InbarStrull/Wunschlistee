@@ -1,8 +1,8 @@
 from .ingredient import get_or_create_ingredient
 from ..models import Tea, Brand, Ingredient, Store, Wishlist, TeaIngredient, TeaPrice, WishlistItem
 from .generic import (add_commit_flush, get_instance, update_instance, delete_instance, get_all_instances,
-                      print_changes_in_instance)
-from .brand import get_or_create_brand
+                      print_changes_in_instance, get_instance_by_columns)
+from .brand import get_or_create_brand, create_brand
 from .tea_ingredient import add_ingredient_to_tea
 from .store import get_or_create_store
 from .tea_price import add_tea_and_price_to_store
@@ -53,6 +53,72 @@ def create_or_update_tea_by_url(db, tea_data):
     return tea
 
 
+def get_tea_by_columns(db, filters):
+    return get_instance_by_columns(db, Tea, filters)
+
+
+def handle_tea_from_store(db, tea_data, brand_id_min):
+    brand_name = tea_data["brand"]
+    name = tea_data["name"]
+    weight = tea_data["weight"]
+    bag_quantity = tea_data["bag_quantity"]
+
+    brand = db.query(Brand).filter_by(name=brand_name).first()
+
+    # if brand does not exist- add tea
+    if not brand or brand.id > brand_id_min:
+        create_tea_process(db, tea_data)
+        print(f"######## added tea {tea_data['name']} ########")
+        return
+
+
+    tea = get_tea_by_name_brand_weight_bag(db,
+                                           brand.id,
+                                           name,
+                                           weight,
+                                           bag_quantity)
+
+    # currently no tea has no bag_quantity and no weight
+    # link tea if weight/bag quantity is None but other fields exist
+
+    if not tea:
+        base_filters = {"brand_id": brand.id, "name": name}
+
+        if not weight and bag_quantity:
+            tea = get_tea_by_columns(db, {**base_filters,
+                                          "bag_quantity": bag_quantity})
+
+        # elif because i dont want to link the tea if both bag quantity and weight are missing
+        elif not bag_quantity and weight:
+            tea = get_tea_by_columns(db, {**base_filters,
+                                          "weight": weight})
+
+        # if bag quantity and weight appear, perhaps the tea in the db don't have them
+        elif weight and bag_quantity:
+            tea_without_weight = get_tea_by_columns(db, {**base_filters,
+                                          "bag_quantity": bag_quantity})
+
+            if tea_without_weight and not tea_without_weight.weight:
+                tea = update_tea(db, tea_without_weight.id, {"weight" :weight})
+
+            else:
+                tea_without_bag_quantity = get_tea_by_columns(db, {**base_filters,
+                                              "weight": weight})
+
+                if tea_without_bag_quantity and not tea_without_bag_quantity.bag_quantity:
+                    tea = update_tea(db, tea_without_bag_quantity.id, {"bag_quantity": bag_quantity})
+
+
+    if tea:
+        link_tea_with_store_and_price(db, tea_data, tea.id)
+        print(f"######## added tea {tea_data['name']} ########")
+
+
+    else:
+        print(f"^^^^^^^^^^ no tea was found for {tea_data['name']} ^^^^^^^^^^")
+
+
+
 def create_tea_process(db, tea_data):
     # create brand if not found
     brand = get_or_create_brand(db, {"name": tea_data["brand"]})
@@ -94,6 +160,7 @@ def get_tea_by_name_brand_weight_bag(db, brand_id, name, weight, bag_quantity):
                                Tea.bag_quantity == bag_quantity).first()
 
     return tea
+
 
 def update_tea(db, tea_id, tea_data):
     return update_instance(db, Tea, tea_data, tea_id)
