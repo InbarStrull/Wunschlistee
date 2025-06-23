@@ -1,5 +1,7 @@
 import logging
 
+from sqlalchemy import and_
+
 
 # generic fetch by id
 def get_instance(db, model, instance_id):
@@ -66,8 +68,6 @@ def update_instance(db, model, new_instance_data, instance_id):
         if updated:
             db.flush()
             db.refresh(instance)
-            db.commit()
-
 
     return instance
 
@@ -88,3 +88,9 @@ def add_commit_flush(db, instance):
     except Exception as e:
         logging.exception("Failed to add and flush instance")
         raise
+
+
+def get_instance_by_columns(db, model, filters):
+    # make sure all columns exist
+    conditions = [getattr(model, key) == value for key, value in filters.items()]
+    return db.query(model).filter(and_(*conditions)).first()
