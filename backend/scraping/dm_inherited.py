@@ -1,6 +1,7 @@
 import re
 import time
 
+from backend.crud.tea import handle_tea_from_store
 from backend.util_functions import insert_to_ingredient_data
 from backend.utils.conversions import safe_conversion_float, safe_conversion_int
 from backend.utils.string_operations import replace_comma_with_dot, replace_texts, \
@@ -457,27 +458,11 @@ class DMScraper(Scraper):
     def add_to_db_func(self, db, tea_data):
         if tea_data["brand"] in ("dmbio", "mivolis", "babylove"):
             super().add_to_db_func(db, tea_data)
-"""
-    def run(self, scraper):
-        page = 0
-        while True:
-            html = fetch_listing_html(f"{self.url}{page}")
-            tea_elements = self.get_elements(html, 'div[data-dmid="product-tile-container"]')
 
-            if not tea_elements:
-                break
+        else:
+            handle_tea_from_store(db, tea_data, 18)
 
-            for tea_html in tea_elements:
-                tea_data = self.parse_tea(tea_html, scraper)
-                if not tea_data:
-                    continue
 
-                self.print_data(tea_data)
-
-            time.sleep(1)
-            page += 1
-
-"""
 
 
 if __name__ == "__main__":
