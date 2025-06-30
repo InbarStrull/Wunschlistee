@@ -73,8 +73,8 @@ def update_instance(db, model, new_instance_data, instance_id):
 
 
 # generic fetch for all instances of a model
-def get_all_instances(db, model):
-    return db.query(model).all()
+def get_all_instances(db, model, skip=0, limit=0):
+    return db.query(model).offset(skip).limit(limit).all()
 
 
 # add and auto generate instance id
