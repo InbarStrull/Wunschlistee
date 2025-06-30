@@ -289,28 +289,6 @@ class SonnentorScraper(Scraper):
         product = SonnentorProduct(brand_page_url, detail_html, scraper, self.base_url)
         return product.product_dict
 
-"""
-    def run(self, scraper):
-        page = 1
-        while True:
-            html = fetch_listing_html(f"{self.url}{page}")
-            tea_elements = self.get_elements(html, "div.col-md-3.col-6")
-
-            if not tea_elements:
-                break
-
-            for tea_html in tea_elements:
-                tea_data = self.parse_tea(tea_html, scraper)
-                if not tea_data:
-                    continue
-
-                self.print_data(tea_data)
-                self.add_tea_to_db(tea_data)
-
-            time.sleep(1)
-            page += 1
-"""
-
 
 if __name__ == "__main__":
     sonnentor_scraper = SonnentorScraper("https://www.sonnentor.com/de-at/onlineshop/tee?page=", "sonnentor")
