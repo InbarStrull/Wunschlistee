@@ -254,8 +254,8 @@ def filter_teas(
     return query.distinct().all()
 
 
-def get_all_teas(db):
-    return get_all_instances(db, Tea)
+def get_all_teas(db, skip=0, limit=100):
+    return get_all_instances(db, Tea, skip, limit)
 
 
 def process_tea_ingredients(db, tea, ingredients_data, lang="de"):
