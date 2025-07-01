@@ -27,5 +27,5 @@ def delete_brand(db, brand_id):
     return delete_instance(db, Brand, brand_id)
 
 
-def get_all_brands(db):
-    return get_all_instances(db, Brand)
+def get_all_brands(db, skip=0, limit=100):
+    return get_all_instances(db, Brand, skip, limit)

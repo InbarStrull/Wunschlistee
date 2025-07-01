@@ -8,7 +8,6 @@ def create_ingredient(db, ingredient_data):
         name_en=ingredient_data["name_en"],
         name_he=ingredient_data["name_iw"],
         name_de=ingredient_data["name_de"],
-        #percentage=ingredient_data["percentage"],
         #wikipedia_url=ingredient_data.get("wikipedia_url")
     )
 
@@ -37,5 +36,5 @@ def delete_ingredient(db, ingredient_id):
     return delete_instance(db, Ingredient, ingredient_id)
 
 
-def get_all_ingredients(db):
-    return get_all_instances(db, Ingredient)
+def get_all_ingredients(db, skip=0, limit=100):
+    return get_all_instances(db, Ingredient, skip, limit)

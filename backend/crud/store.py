@@ -28,5 +28,5 @@ def delete_store(db, store_id):
     return delete_instance(db, Store, store_id)
 
 
-def get_all_stores(db):
-    return get_all_instances(db, Store)
+def get_all_stores(db, skip=0, limit=100):
+    return get_all_instances(db, Store, skip, limit)
