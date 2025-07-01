@@ -123,6 +123,8 @@ class WishlistOut(WishlistBase):
     class Config:
         orm_mode = True
 
+class WishlistUpdate(BaseModel):
+    name: Optional[str] = None
 
 class WishlistItemCreate(BaseModel):
     wishlist_id: int
