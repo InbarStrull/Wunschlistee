@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from backend import models, schemas
-from backend.crud.tea import get_all_teas, get_tea, create_tea_process
+from backend import schemas
+from backend.crud.tea import get_all_teas, get_tea, create_tea_process, delete_tea
 from backend.database import get_db
 
 router = APIRouter(
@@ -45,8 +45,8 @@ def create_tea(tea_in: schemas.TeaCreate, db: Session = Depends(get_db)):
 
 # DELETE /teas/{tea_id} delete a tea
 @router.delete("/{tea_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_tea(tea_id: int, db: Session = Depends(get_db)):
-    tea = delete_tea(tea_id, db)
+def delete_tea_from_db(tea_id: int, db: Session = Depends(get_db)):
+    tea = delete_tea(db, tea_id)
 
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
