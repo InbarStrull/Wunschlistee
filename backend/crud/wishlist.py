@@ -24,5 +24,5 @@ def delete_wishlist(db, wishlist_id):
     return delete_instance(db, Wishlist, wishlist_id)
 
 
-def get_all_wishlists(db):
-    return get_all_instances(db, Wishlist)
+def get_all_wishlists(db, skip=0, limit=100):
+    return get_all_instances(db, Wishlist, skip, limit)
