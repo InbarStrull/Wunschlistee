@@ -8,7 +8,7 @@ from .store import get_or_create_store
 from .tea_price import add_tea_and_price_to_store
 from typing import Optional, List
 from decimal import Decimal
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 
 def create_tea(db, tea_data, brand_id):
@@ -167,7 +167,17 @@ def update_tea(db, tea_id, tea_data):
 
 
 def delete_tea(db, tea_id):
-    return delete_instance(db, Tea, tea_id)
+    tea = db.query(Tea).options(
+        selectinload(Tea.tea_ingredients),
+        selectinload(Tea.prices),
+        selectinload(Tea.wishlist_items)
+    ).filter(id == tea_id).first()
+
+    if tea:
+        db.delete(tea)
+        db.commit()
+
+    return tea
 
 
 def filter_teas(
